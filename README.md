@@ -1,7 +1,7 @@
 # research_codes
 Codes for general PhD research
 
-## Isabella Seppi Research codes for Venus Seismology Projects
+## Bella Seppi Research codes for Venus Seismology Projects
 
 _Codes designed to use **SPECFEM**. Some copied from [Bryant Chow](https://github.com/bch0w/spectral/tree/master/research/venusseis/simulations) and modified._ 
 
