@@ -3151,7 +3151,7 @@
 
         ! VENUS EDITS HERE ---- VENUS
 
-         if (material_element(ispec) == IREGION_OUTER_CORE .and. ii < 274) ii = 274
+         if (material_element(ispec) == IREGION_OUTER_CORE .and. ii < 273) ii = 273
 
 
         if (ii == 1) then
