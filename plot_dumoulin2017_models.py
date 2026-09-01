@@ -76,14 +76,14 @@ ylabel = ["Temp (K)", "?", "rho (kg/m^3)", "Vp (km/s)", "Vs (km/s)"]
 
 # Read in the files used
 values = {}
-fids = sorted(glob("V[145]-*.out"))
+fids = sorted(glob("V[145]-*/V[145]-*.out"))
 colors = ["C3", "C0", "C1", "C2", "C4", "C5", "C6"] 
 for fid in fids:
-    depth, *variables = np.loadtxt(fid, skiprows=1).T
+    radius, *variables = np.loadtxt(fid, skiprows=1).T
     values[fid.split(".")[0]] = variables
 
-# Flip the depth axis so that 0 is the surface (not the core)
-depth = depth[::-1]  
+# Flip the depth axis so that the surface is at the top
+depth = radius[::-1]  
 
 # Plot one paramter for all models on a single figure
 idxs = {}
