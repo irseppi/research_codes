@@ -7,11 +7,9 @@ from pysep import logger
 from collections import defaultdict
 from matplotlib import pyplot as plt
 from obspy import UTCDateTime, Stream, Trace
-from obspy.geodetics import kilometer2degrees
 from obspy.taup import TauPyModel, taup_create
 from pysep.utils.cap_sac import append_sac_headers, append_sac_headers_cartesian
-
-
+from obspy.taup import plot_travel_times
 def read_sem(fid, origintime="1970-01-01T00:00:00", source=None, stations=None, 
              location="", precision=4, source_format="CMTSOLUTION"):
     """
@@ -117,47 +115,64 @@ fids = [
 
 folders = ['V1-Tc']
 event_depth = 0 #km
-cutoff = 0.018 #0.025
+cutoff = 0.027980241614718911 #from specfem
 
 trs = {}
 
 taup_create.build_taup_model("V1-Tc.tvel")
 model = TauPyModel(model="V1-Tc")
+fig, ax = plt.subplots(figsize=(9, 9))
+ax = plot_travel_times(source_depth=0, phase_list=["ttbasic"], model=model,
+                    ax=ax, fig=fig)
 
+dist_degree = 0
+dist_degree_hold = 15  
 phase_dict = defaultdict(list)
-for fid in fids:
+for jj, fid in enumerate(fids):
     st = read_sem('V1-Tc_folder/waveforms/'+fid, origintime="1970-01-01T00:00:00",
                     source=None, stations=None, location="", precision=4, 
                     source_format="CMTSOLUTION")
     
     tr = st[0]
-    dist_degree = float(fid.split('.')[1][2:]) # extract distance from filename
-    dist_km = dist_degree * 111.19 # convert degrees to km
-    
+    dist_degree = dist_degree_hold
+    dist_degree_hold += 15
+    #arrivals = model.get_ray_paths(source_depth_in_km=0, 
+    #                               distance_in_degree=dist_degree, 
+    #                               phase_list=['P', 'S', 'PP', 'SS'])
+    #ax = arrivals.plot_rays(plot_type="cartesian")
 
-    #tr.filter('lowpass', freq=cutoff, corners=4, zerophase=True)
+    tr.filter('lowpass', freq=cutoff, corners=4, zerophase=True)
 
-    trs[dist_km] = tr.copy()
- 
+    trs[dist_degree] = tr.copy()
+
+
     arrival_s = model.get_travel_times(source_depth_in_km=event_depth,
-                                        distance_in_degree=kilometer2degrees(dist_km),
-                                        phase_list=['ttall'])
+                                        distance_in_degree=dist_degree,
+                                        phase_list=['P', 'S', 'PP', 'SS'])
+    # Keep only the earliest (first) arrival for each phase at this distance.
+    first_arrivals = {}
     for a in arrival_s:
-        phase_dict[a.name].append((dist_km, a.time))
+        if a.name not in first_arrivals or a.time < first_arrivals[a.name].time:
+            first_arrivals[a.name] = a
+
+    for a in first_arrivals.values():
+        print(fid, a.name, a.time)
+        phase_dict[a.name].append((dist_degree, a.time))
+        
 
 # determine normalization scale (so traces visually comparable)
-max_amp = max((np.nanmax(np.abs(trs[dist_km].data)) for dist_km in trs.keys()))
+max_amp = max((np.nanmax(np.abs(trs[dist_degree].data)) for dist_degree in trs.keys()))
 spacing = list(trs.keys())[1] - list(trs.keys())[0] # vertical spacing between traces (in y units)
 amp_scale = 0.8 * spacing / max_amp  # scale so peaks occupy ~80% of spacing
 
-colors = {phase: plt.cm.tab10(i) for i, phase in enumerate(phase_dict.keys())}
+colors = {phase: plt.cm.tab20(i % 20) for i, phase in enumerate(phase_dict.keys())}
 
 fig, ax = plt.subplots(1, 1, figsize=(4, 5))
 
 for d, tr in trs.items():
     t = tr.times()
     scaled = tr.data * amp_scale + d
-    ax.plot(t/2, scaled, color='k', linewidth=0.7)
+    ax.plot(t, scaled, color='k', linewidth=0.7)
 
 arrival_half_height = 0.4 * 0.8 * spacing
 for phase in phase_dict.keys():
@@ -173,4 +188,3 @@ ax.set_ylabel(f"Amplitude (x{amp_scale:.1e})")
 ax.set_xlabel("Time (s)")
 ax.legend(loc='upper right', fontsize=8, frameon=True, framealpha=0.9)
 plt.show()
-
