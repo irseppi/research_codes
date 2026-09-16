@@ -104,7 +104,7 @@ def read_sem(fid, origintime="1970-01-01T00:00:00", source=None, stations=None,
 
     return st
 
-
+#How to rotate the traces to radial and transverse components? 
 fids = [
     'XX.S075.BXX.semd', 'XX.S060.BXX.semd',
     'XX.S045.BXX.semd', 'XX.S030.BXX.semd', 'XX.S015.BXX.semd',
@@ -121,15 +121,16 @@ trs = {}
 
 taup_create.build_taup_model("V1-Tc.tvel")
 model = TauPyModel(model="V1-Tc")
-fig, ax = plt.subplots(figsize=(9, 9))
-ax = plot_travel_times(source_depth=0, phase_list=["ttbasic"], model=model,
-                    ax=ax, fig=fig)
+#fig, ax = plt.subplots(figsize=(9, 9))
+#ax = plot_travel_times(source_depth=0, phase_list=["ttbasic"], model=model,
+#                    ax=ax, fig=fig)
 
 dist_degree = 0
 dist_degree_hold = 15  
 phase_dict = defaultdict(list)
+phase_colors = {}
 for jj, fid in enumerate(fids):
-    st = read_sem('V1-Tc_folder/waveforms/'+fid, origintime="1970-01-01T00:00:00",
+    st = read_sem('V1-Tc_folder/waveforms_horizontal/'+fid, origintime="1970-01-01T00:00:00",
                     source=None, stations=None, location="", precision=4, 
                     source_format="CMTSOLUTION")
     
@@ -148,18 +149,29 @@ for jj, fid in enumerate(fids):
 
     arrival_s = model.get_travel_times(source_depth_in_km=event_depth,
                                         distance_in_degree=dist_degree,
-                                        phase_list=['P', 'S', 'PP', 'SS'])
+                                        phase_list=['ttall']) #'P', 'S', 'PP', 'SS'])
     # Keep only the earliest (first) arrival for each phase at this distance.
     first_arrivals = {}
     for a in arrival_s:
         if a.name not in first_arrivals or a.time < first_arrivals[a.name].time:
             first_arrivals[a.name] = a
-
+    plt.figure()
+    plt.plot(tr.times(), tr.data, color='k', linewidth=0.7)
     for a in first_arrivals.values():
         print(fid, a.name, a.time)
         phase_dict[a.name].append((dist_degree, a.time))
-        
+        phase_colors.setdefault(
+            a.name, plt.cm.tab20(len(phase_colors) % 20)
+        )
 
+        plt.axvline(a.time, linewidth=1.0,
+                color=phase_colors[a.name], label=a.name, zorder=100)
+    plt.title(f"{fid} at {dist_degree} degrees")
+    plt.xlabel("Time (s)")
+    plt.ylabel("Amplitude")
+    plt.legend(loc='upper right', fontsize=8, frameon=True, framealpha=0.9)
+    plt.show()
+    #plt.close()
 # determine normalization scale (so traces visually comparable)
 max_amp = max((np.nanmax(np.abs(trs[dist_degree].data)) for dist_degree in trs.keys()))
 spacing = list(trs.keys())[1] - list(trs.keys())[0] # vertical spacing between traces (in y units)
