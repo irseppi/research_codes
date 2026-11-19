@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # gets the default compiler
-f90=`grep "^FC " ../../../../Makefile | cut -d = -f 2 | cut -d \# -f 1 | tr -d ' '`
+f90=`grep "^FC " /home/irseppi/REPOS/specfem2d/Makefile | cut -d = -f 2 | cut -d \# -f 1 | tr -d ' '`
 
 
 ## intel debug flags

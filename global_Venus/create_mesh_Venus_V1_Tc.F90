@@ -14,10 +14,10 @@
 ! 45 is accurate down to periods of about 1 second
 ! 64 is accurate down to periods of about 0.7 second
 ! 90 is accurate down to periods of about 0.5 second
-  integer, parameter :: multiplication_factor = 2 ! 1 ! 22 ! 45
+  integer, parameter :: multiplication_factor = 5 ! 1 ! 22 ! 45
 
 ! output a Gnuplot grid or not (set to false when creating a very large mesh for very short periods)
-  logical, parameter :: output_gnuplot_grid = .true. ! .true.
+  logical, parameter :: output_gnuplot_grid = .false. ! .true.
 
 !  The routine uses 9 control nodes defined as follows:
 !
