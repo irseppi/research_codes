@@ -1,4 +1,11 @@
 #!/bin/bash
+#SBATCH --job-name=global_venus_sim
+#SBATCH --nodes=2
+#SBATCH --ntasks=48
+#SBATCH --tasks-per-node=24
+#SBATCH --partition=t2small
+#SBATCH --time=02:00:00
+#SBATCH --output=log.txt
 
 echo "running example: `date`"
 currentdir=`pwd`
@@ -17,8 +24,8 @@ rm -rf OUTPUT_FILES/*
 mkdir -p bin
 cd bin/
 rm -f xmeshfem2D xspecfem2D
-ln -s ../../../../../bin/xmeshfem2D
-ln -s ../../../../../bin/xspecfem2D
+ln -s /home/irseppi/REPOS/specfem2d/bin/xmeshfem2D
+ln -s /home/irseppi/REPOS/specfem2d/bin/xspecfem2D
 cd ../
 
 # Build the mesh
